@@ -38,7 +38,15 @@ jobs:
           fi
           echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
 
+      - name: Cache native libraries
+        id: hev-cache
+        uses: actions/cache@v4
+        with:
+          path: libs/arm64-v8a
+          key: hev-native-${{ runner.os }}-ndk-29.0.14206865-${{ hashFiles('compile-hevtun.sh', 'hev-socks5-tunnel/**') }}
+          
       - name: Build native libraries
+        if: steps.hev-cache.outputs.cache-hit != 'true'
         run: |
           chmod +x compile-hevtun.sh
           bash compile-hevtun.sh
