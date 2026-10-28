@@ -1,5 +1,6 @@
 package com.v2ray.ang.ui.settings
 
+import androidx.compose.animation.AnimatedVisibility
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Build
@@ -240,7 +241,7 @@ fun SettingsScreen(
                 expanded = uiSettingsExpanded,
                 onExpandedChange = { uiSettingsExpanded = it }
             )
-            if (uiSettingsExpanded) {
+            AnimatedVisibility(visible = uiSettingsExpanded) {
                 SettingsSwitchItem(
                     title = stringResource(R.string.title_pref_speed_enabled),
                     summary = stringResource(R.string.summary_pref_speed_enabled),
@@ -308,7 +309,7 @@ fun SettingsScreen(
                 expanded = vpnSettingsExpanded,
                 onExpandedChange = { vpnSettingsExpanded = it }
             )
-            if (vpnSettingsExpanded) {
+            AnimatedVisibility(visible = vpnSettingsExpanded) {
                 SettingsSwitchItem(
                     title = stringResource(R.string.title_pref_ipv6_enabled),
                     summary = stringResource(R.string.summary_pref_ipv6_enabled),
@@ -405,7 +406,7 @@ fun SettingsScreen(
                 expanded = coreSettingsExpanded,
                 onExpandedChange = { coreSettingsExpanded = it }
             )
-            if (coreSettingsExpanded) {
+            AnimatedVisibility(visible = coreSettingsExpanded) {
                 SettingsSwitchItem(
                     title = stringResource(R.string.title_pref_sniffing_enabled),
                     summary = stringResource(R.string.summary_pref_sniffing_enabled),
@@ -509,7 +510,7 @@ fun SettingsScreen(
                 expanded = muxSettingsExpanded,
                 onExpandedChange = { muxSettingsExpanded = it }
             )
-            if (muxSettingsExpanded) {
+            AnimatedVisibility(visible = muxSettingsExpanded) {
                 SettingsSwitchItem(
                     title = stringResource(R.string.title_pref_mux_enabled),
                     summary = stringResource(R.string.summary_pref_mux_enabled),
@@ -545,7 +546,7 @@ fun SettingsScreen(
                 expanded = fragmentSettingsExpanded,
                 onExpandedChange = { fragmentSettingsExpanded = it }
             )
-            if (fragmentSettingsExpanded) {
+            AnimatedVisibility(visible = fragmentSettingsExpanded) {
                 SettingsSwitchItem(
                     title = stringResource(R.string.title_pref_fragment_enabled),
                     checked = fragment,
@@ -585,7 +586,7 @@ fun SettingsScreen(
                 expanded = observatorySettingsExpanded,
                 onExpandedChange = { observatorySettingsExpanded = it }
             )
-            if (observatorySettingsExpanded) {
+            AnimatedVisibility(visible = observatorySettingsExpanded) {
                 SettingsEditItem(
                     title = stringResource(R.string.title_pref_observatory_least_ping_interval),
                     value = observatoryLeastPingInterval,
@@ -637,7 +638,7 @@ fun SettingsScreen(
                 expanded = advancedSettingsExpanded,
                 onExpandedChange = { advancedSettingsExpanded = it }
             )
-            if (advancedSettingsExpanded) {
+            AnimatedVisibility(visible = advancedSettingsExpanded) {
                 SettingsSwitchItem(
                     title = stringResource(R.string.title_pref_is_booted),
                     summary = stringResource(R.string.summary_pref_is_booted),
@@ -674,7 +675,7 @@ fun SettingsScreen(
                 expanded = modeSettingsExpanded,
                 onExpandedChange = { modeSettingsExpanded = it }
             )
-            if (modeSettingsExpanded) {
+            AnimatedVisibility(visible = modeSettingsExpanded) {
                 SettingsListItem(
                     title = stringResource(R.string.title_mode),
                     entries = modeEntries,
