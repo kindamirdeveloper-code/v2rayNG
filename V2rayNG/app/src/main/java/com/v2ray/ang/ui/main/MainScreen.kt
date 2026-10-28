@@ -143,8 +143,10 @@ fun MainScreen(
             MainDrawerContent(
                 drawerState = drawerState,
                 onNavigate = { route ->
-                    scope.launch { drawerState.close() }
-                    onNavigate(route)
+    scope.launch {
+        drawerState.close()
+        onNavigate(route)
+    }
                 }
             )
         }
