@@ -1,51 +1,71 @@
-    - name: Setup Java
-      uses: actions/setup-java@v6.1.0
-      with:
-        distribution: 'temurin'
-        java-version: '21'
 
-    - name: Build APK
-      run: |
-        cd ${{ github.workspace }}/V2rayNG
-        echo "sdk.dir=${ANDROID_HOME}" > local.properties
-        chmod 755 gradlew
-        ./gradlew assembleDebug
+name: Build Nexa APK
 
-    - name: Upload arm64-v8a APK
-      uses: actions/upload-artifact@v7
-      if: ${{ success() }}
-      with:
-        name: arm64-v8a
-        path: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*/debug/*arm64-v8a*.apk
-        if-no-files-found: warn
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
 
-    - name: Upload armeabi-v7a APK
-      uses: actions/upload-artifact@v7
-      if: ${{ success() }}
-      with:
-        name: armeabi-v7a
-        path: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*/debug/*armeabi-v7a*.apk
-        if-no-files-found: warn
+permissions:
+  contents: read
 
-    - name: Upload x86 APK
-      uses: actions/upload-artifact@v7
-      if: ${{ success() }}
-      with:
-        name: x86-apk
-        path: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*/debug/*x86*.apk
-        if-no-files-found: warn
-
-    - name: Upload universal APK
-      uses: actions/upload-artifact@v7
-      if: ${{ success() }}
-      with:
-        name: universal-apk
-        path: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*/debug/*universal*.apk
-        if-no-files-found: warn
-
-  sign-and-release:
-    needs: build
-    if: false
+jobs:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - run: echo "Release disabled for debug builds"
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK and NDK
+        run: |
+          sdkmanager "platforms;android-37" "build-tools;37.0.0" "ndk;29.0.14206865"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
+
+      - name: Build native libraries
+        run: |
+          chmod +x compile-hevtun.sh
+          bash compile-hevtun.sh
+
+      - name: Get libv2ray version
+        id: xray
+        run: |
+          cd AndroidLibXrayLite
+          echo "tag=$(git describe --tags --abbrev=0)" >> "$GITHUB_OUTPUT"
+
+      - name: Download libv2ray
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: 2dust/AndroidLibXrayLite
+          tag: ${{ steps.xray.outputs.tag }}
+          fileName: libv2ray.aar
+          out-file-path: V2rayNG/app/libs/
+
+      - name: Build debug APK
+        run: |
+          cd V2rayNG
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          chmod +x gradlew
+          ./gradlew assemblePlaystoreDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nexa-debug-APK
+          path: V2rayNG/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 7
+          
