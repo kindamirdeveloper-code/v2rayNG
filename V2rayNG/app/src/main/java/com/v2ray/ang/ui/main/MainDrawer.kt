@@ -61,26 +61,12 @@ private val drawerItems = listOf(
     MainDestination.Routing,
     MainDestination.Settings
 )
-}
-
-private val primaryDrawerItems = listOf(
-    MainDestination.Subscriptions,
-    MainDestination.PerAppProxy,
-    MainDestination.Routing,
-    MainDestination.UserAssets,
-    MainDestination.Settings
-)
-
-private val drawerItems = primaryDrawerItems + listOf(
-    MainDestination.Promotion,
-    MainDestination.Logcat,
-    MainDestination.CheckUpdate,
-    MainDestination.BackupRestore,
-    MainDestination.About
-)
 
 @Composable
-fun MainDrawerContent(drawerState: DrawerState, onNavigate: (MainDestination) -> Unit) {
+fun MainDrawerContent(
+    drawerState: DrawerState,
+    onNavigate: (MainDestination) -> Unit
+) {
     val drawerScrollState = rememberScrollState()
 
     ModalDrawerSheet(
@@ -106,16 +92,23 @@ fun MainDrawerContent(drawerState: DrawerState, onNavigate: (MainDestination) ->
                     verticalArrangement = Arrangement.Center
                 ) {
                     val isDarkTheme = LocalDarkTheme.current
+
                     Image(
-                        painter = painterResource(R.mipmap.ic_launcher_foreground),
+                        painter = painterResource(
+                            R.mipmap.ic_launcher_foreground
+                        ),
                         contentDescription = null,
                         modifier = Modifier.size(120.dp),
                         colorFilter = if (isDarkTheme) {
-                            ColorFilter.tint(Color.White, BlendMode.SrcIn)
+                            ColorFilter.tint(
+                                Color.White,
+                                BlendMode.SrcIn
+                            )
                         } else {
                             null
                         }
                     )
+
                     Text(
                         text = stringResource(R.string.app_name),
                         style = MaterialTheme.typography.titleLarge,
@@ -123,13 +116,25 @@ fun MainDrawerContent(drawerState: DrawerState, onNavigate: (MainDestination) ->
                     )
                 }
             }
-            drawerItems.forEach { index, item ->
+
+            drawerItems.forEach { item ->
                 NavigationDrawerItem(
-                    label = { Text(stringResource(item.labelRes)) },
+                    label = {
+                        Text(stringResource(item.labelRes))
+                    },
                     selected = false,
-                    onClick = { onNavigate(item) },
-                    icon = { Icon(painterResource(item.iconRes), contentDescription = null) },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                    onClick = {
+                        onNavigate(item)
+                    },
+                    icon = {
+                        Icon(
+                            painter = painterResource(item.iconRes),
+                            contentDescription = null
+                        )
+                    },
+                    modifier = Modifier.padding(
+                        NavigationDrawerItemDefaults.ItemPadding
+                    )
                 )
             }
         }
