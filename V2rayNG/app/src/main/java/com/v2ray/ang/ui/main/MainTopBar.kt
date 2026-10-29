@@ -1,5 +1,8 @@
 package com.v2ray.ang.ui.main
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -40,6 +43,11 @@ fun MainTopBar(
     onMoreMenuAction: (MainMoreMenuAction) -> Unit
 ) {
     var showImportMenu by remember { mutableStateOf(false) }
+val importIconRotation by animateFloatAsState(
+    targetValue = if (showImportMenu) 45f else 0f,
+    animationSpec = tween(durationMillis = 180),
+    label = "importMenuIconRotation"
+)
     var showMenu by remember { mutableStateOf(false) }
     val importMenuScrollState = rememberScrollState()
     val moreMenuScrollState = rememberScrollState()
@@ -75,7 +83,13 @@ fun MainTopBar(
             }
             Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
                 IconButton(onClick = { showImportMenu = true }) {
-                    Icon(painterResource(R.drawable.ic_add_24dp), contentDescription = stringResource(R.string.acc_add))
+                    Icon(
+    painter = painterResource(R.drawable.ic_add_24dp),
+    contentDescription = stringResource(R.string.acc_add),
+    modifier = Modifier.graphicsLayer {
+        rotationZ = importIconRotation
+    }
+)
                 }
                 DropdownMenu(
                     expanded = showImportMenu,
