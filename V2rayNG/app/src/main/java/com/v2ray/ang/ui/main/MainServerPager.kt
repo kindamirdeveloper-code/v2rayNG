@@ -1,5 +1,9 @@
 package com.v2ray.ang.ui.main
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -353,16 +357,28 @@ private fun ServerListItem(
     } else {
         null
     }
+    val selectedBackground by animateColorAsState(
+    targetValue = if (isSelected) {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+    } else {
+        Color.Transparent
+    },
+    animationSpec = tween(durationMillis = 220),
+    label = "serverSelectionBackground"
+)
     Row(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(IntrinsicSize.Min)
-            .semantics {
-                if (selectedStateDescription != null) {
-                    stateDescription = selectedStateDescription
-                }
-            }
-            .clickable { actions.select(row.guid) }
+    .fillMaxWidth()
+    .padding(horizontal = 8.dp, vertical = 4.dp)
+    .clip(RoundedCornerShape(18.dp))
+    .background(selectedBackground)
+    .height(IntrinsicSize.Min)
+    .semantics {
+        if (selectedStateDescription != null) {
+            stateDescription = selectedStateDescription
+        }
+    }
+    .clickable { actions.select(row.guid) },
     ) {
         Box(
             Modifier
