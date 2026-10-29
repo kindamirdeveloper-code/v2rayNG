@@ -1,7 +1,7 @@
+
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:ignore="MissingLeanbackLauncher">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <supports-screens
         android:anyDensity="true"
@@ -17,9 +17,6 @@
         android:name="android.hardware.camera.autofocus"
         android:required="false" />
     <uses-feature
-        android:name="android.software.leanback"
-        android:required="false" />
-    <uses-feature
         android:name="android.hardware.touchscreen"
         android:required="false" />
 
@@ -32,7 +29,8 @@
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE"
         tools:ignore="ForegroundServicesPolicy" />
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
@@ -44,7 +42,6 @@
     <application
         android:name=".AngApplication"
         android:allowBackup="true"
-        android:banner="@mipmap/ic_banner"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_security_config"
@@ -67,9 +64,7 @@
             android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
@@ -79,6 +74,7 @@
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
         </activity>
+
         <activity
             android:name=".ui.server.ServerVmessActivity"
             android:exported="false"
@@ -155,7 +151,6 @@
             android:name=".ui.userasset.UserAssetUrlActivity"
             android:windowSoftInputMode="stateUnchanged|adjustResize"
             android:exported="false" />
-
         <activity
             android:name=".ui.subscription.SubEditActivity"
             android:windowSoftInputMode="stateUnchanged|adjustResize"
@@ -192,10 +187,8 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
-
                 <data android:scheme="v2rayng" />
                 <data android:host="install-config" />
                 <data android:host="install-sub" />
@@ -289,6 +282,7 @@
                 <action android:name="${applicationId}.action.activity" />
             </intent-filter>
         </receiver>
+
         <receiver
             android:name=".receiver.BootReceiver"
             android:exported="true"
@@ -315,6 +309,7 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="tile" />
         </service>
+
         <!-- =====================Tasker===================== -->
         <activity
             android:name=".ui.shortcut.TaskerActivity"
@@ -335,17 +330,16 @@
             </intent-filter>
         </receiver>
         <!-- =====================Tasker===================== -->
+
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
             android:exported="false"
             tools:node="merge">
-
             <meta-data
                 android:name="androidx.work.WorkManagerInitializer"
                 android:value="androidx.startup"
                 tools:node="remove" />
-
         </provider>
 
         <service
