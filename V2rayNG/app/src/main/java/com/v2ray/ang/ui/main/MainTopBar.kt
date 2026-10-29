@@ -1,8 +1,8 @@
+
 package com.v2ray.ang.ui.main
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -43,22 +44,34 @@ fun MainTopBar(
     onMoreMenuAction: (MainMoreMenuAction) -> Unit
 ) {
     var showImportMenu by remember { mutableStateOf(false) }
-val importIconRotation by animateFloatAsState(
-    targetValue = if (showImportMenu) 45f else 0f,
-    animationSpec = tween(durationMillis = 180),
-    label = "importMenuIconRotation"
-)
+
+    val importIconRotation by animateFloatAsState(
+        targetValue = if (showImportMenu) 45f else 0f,
+        animationSpec = tween(durationMillis = 180),
+        label = "importMenuIconRotation"
+    )
+
     var showMenu by remember { mutableStateOf(false) }
-val moreIconRotation by animateFloatAsState(
-    targetValue = if (showMenu) 90f else 0f,
-    animationSpec = tween(durationMillis = 180),
-    label = "moreMenuIconRotation"
-)
+
+    val moreIconRotation by animateFloatAsState(
+        targetValue = if (showMenu) 90f else 0f,
+        animationSpec = tween(durationMillis = 180),
+        label = "moreMenuIconRotation"
+    )
+
     val importMenuScrollState = rememberScrollState()
     val moreMenuScrollState = rememberScrollState()
-    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val navBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    val maxMenuHeight = LocalConfiguration.current.screenHeightDp.dp - statusBarHeight - navBarHeight - 20.dp
+
+    val statusBarHeight =
+        WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val navBarHeight =
+        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
+    val maxMenuHeight =
+        LocalConfiguration.current.screenHeightDp.dp -
+            statusBarHeight -
+            navBarHeight -
+            20.dp
 
     AppTopBar(
         title = stringResource(R.string.title_server),
@@ -69,39 +82,49 @@ val moreIconRotation by animateFloatAsState(
         onSearchQueryChange = onSearchQueryChange,
         onSearchClose = onSearchClose,
         searchPlaceholder = stringResource(R.string.menu_item_search),
+
         navigationIcon = {
             if (showSearch) {
                 IconButton(onClick = onSearchClose) {
-                    Icon(painterResource(R.drawable.ic_arrow_back_24dp), contentDescription = stringResource(R.string.acc_back))
+                    Icon(
+                        painter = painterResource(R.drawable.ic_arrow_back_24dp),
+                        contentDescription = stringResource(R.string.acc_back)
+                    )
                 }
             } else {
                 IconButton(onClick = onMenuClick) {
                     Icon(
-    painter = painterResource(R.drawable.ic_more_vert_24dp),
-    contentDescription = stringResource(R.string.acc_more),
-    modifier = Modifier.graphicsLayer {
-        rotationZ = moreIconRotation
-    }
-)
+                        painter = painterResource(R.drawable.ic_menu_24dp),
+                        contentDescription = stringResource(R.string.acc_open_menu)
+                    )
                 }
             }
         },
+
         actions = {
             if (!showSearch) {
                 IconButton(onClick = { onSearchToggle(true) }) {
-                    Icon(painterResource(R.drawable.ic_search_24dp), contentDescription = stringResource(R.string.acc_search))
+                    Icon(
+                        painter = painterResource(R.drawable.ic_search_24dp),
+                        contentDescription = stringResource(R.string.acc_search)
+                    )
                 }
             }
-            Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
+
+            // Add / import menu
+            Box(
+                modifier = Modifier.wrapContentSize(Alignment.TopEnd)
+            ) {
                 IconButton(onClick = { showImportMenu = true }) {
                     Icon(
-    painter = painterResource(R.drawable.ic_add_24dp),
-    contentDescription = stringResource(R.string.acc_add),
-    modifier = Modifier.graphicsLayer {
-        rotationZ = importIconRotation
-    }
-)
+                        painter = painterResource(R.drawable.ic_add_24dp),
+                        contentDescription = stringResource(R.string.acc_add),
+                        modifier = Modifier.graphicsLayer {
+                            rotationZ = importIconRotation
+                        }
+                    )
                 }
+
                 DropdownMenu(
                     expanded = showImportMenu,
                     onDismissRequest = { showImportMenu = false },
@@ -119,10 +142,21 @@ val moreIconRotation by animateFloatAsState(
                     )
                 }
             }
-            Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
+
+            // More options menu
+            Box(
+                modifier = Modifier.wrapContentSize(Alignment.TopEnd)
+            ) {
                 IconButton(onClick = { showMenu = true }) {
-                    Icon(painterResource(R.drawable.ic_more_vert_24dp), contentDescription = stringResource(R.string.acc_more))
+                    Icon(
+                        painter = painterResource(R.drawable.ic_more_vert_24dp),
+                        contentDescription = stringResource(R.string.acc_more),
+                        modifier = Modifier.graphicsLayer {
+                            rotationZ = moreIconRotation
+                        }
+                    )
                 }
+
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false },
