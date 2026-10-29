@@ -283,7 +283,7 @@ fun SettingsScreen(
     val hevLogEntries = stringArrayResource(R.array.hev_tunnel_loglevel).toList()
     val hevLogValues = stringArrayResource(R.array.hev_tunnel_loglevel).toList()
     val coreLogLevelEntries = stringArrayResource(R.array.core_loglevel).toList()
-    val coreLogLevelValues = stringArrayResource(R.array.core_loglevel_value).toList()
+    val coreLogLevelValues = stringArrayResource(R.array.core_loglevel).toList()
     val outboundResolveEntries = stringArrayResource(
         R.array.outbound_domain_resolve_method
     ).toList()
