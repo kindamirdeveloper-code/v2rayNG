@@ -1,5 +1,8 @@
 package com.v2ray.ang.ui.main
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -50,6 +53,17 @@ fun MainBottomBar(
 ) {
     val scope = rememberCoroutineScope()
     val rotationAnim = remember { Animatable(0f) }
+    val fabContainerColor by animateColorAsState(
+    targetValue = if (isRunning) {
+        colorFabActive
+    } else if (isDarkTheme) {
+        colorFabInactiveDark
+    } else {
+        colorFabInactiveLight
+    },
+    animationSpec = tween(durationMillis = 280),
+    label = "connectionButtonColor"
+)
 
     LaunchedEffect(isRunning) {
         if (!isRunning) {
@@ -67,22 +81,32 @@ fun MainBottomBar(
         ) {
             AppDivider()
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = displayText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.semantics {
-                        contentDescription = displayText
-                    }
-                )
-            }
-        }
+    modifier = Modifier
+        .fillMaxWidth()
+        .height(64.dp)
+        .padding(horizontal = 16.dp),
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.SpaceBetween
+) {
+    Crossfade(
+        targetState = displayText,
+        animationSpec = tween(durationMillis = 180),
+        label = "connectionStatus"
+    ) { statusText ->
+        Text(
+            text = statusText,
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 68.dp)
+                .semantics {
+                    contentDescription = statusText
+                }
+        )
+    }
+          }
         FloatingActionButton(
             onClick = {
                 if (!isRunning) {
@@ -100,9 +124,7 @@ fun MainBottomBar(
                 .padding(end = 24.dp)
                 .offset(y = (-28).dp)
                 .navigationBarsPadding(),
-            containerColor = if (isRunning) colorFabActive
-            else if (isDarkTheme) colorFabInactiveDark
-            else colorFabInactiveLight
+            containerColor = fabContainerColor
         ) {
             Icon(
                 painter = if (isRunning) painterResource(R.drawable.ic_stop_24dp)
