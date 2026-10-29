@@ -49,6 +49,11 @@ val importIconRotation by animateFloatAsState(
     label = "importMenuIconRotation"
 )
     var showMenu by remember { mutableStateOf(false) }
+val moreIconRotation by animateFloatAsState(
+    targetValue = if (showMenu) 90f else 0f,
+    animationSpec = tween(durationMillis = 180),
+    label = "moreMenuIconRotation"
+)
     val importMenuScrollState = rememberScrollState()
     val moreMenuScrollState = rememberScrollState()
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -71,7 +76,13 @@ val importIconRotation by animateFloatAsState(
                 }
             } else {
                 IconButton(onClick = onMenuClick) {
-                    Icon(painterResource(R.drawable.ic_menu_24dp), contentDescription = stringResource(R.string.acc_open_menu))
+                    Icon(
+    painter = painterResource(R.drawable.ic_more_vert_24dp),
+    contentDescription = stringResource(R.string.acc_more),
+    modifier = Modifier.graphicsLayer {
+        rotationZ = moreIconRotation
+    }
+)
                 }
             }
         },
