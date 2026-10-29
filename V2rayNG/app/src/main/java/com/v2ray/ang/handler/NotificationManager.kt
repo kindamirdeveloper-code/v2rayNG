@@ -92,18 +92,26 @@ object NotificationManager {
             }
 
         mBuilder = NotificationCompat.Builder(service, channelId)
-            .setSmallIcon(R.drawable.ic_stat_name)
-            .setContentTitle(currentConfig?.remarks ?: service.getString(R.string.app_name))
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
-            .setShowWhen(false)
-            .setOnlyAlertOnce(true)
-            .setContentIntent(contentPendingIntent)
-            .addAction(
-                R.drawable.ic_delete_24dp,
-                service.getString(R.string.notification_action_stop_v2ray),
-                stopV2RayPendingIntent
-            )
+    .setSmallIcon(R.drawable.ic_stat_name)
+    .setContentTitle(currentConfig?.remarks ?: service.getString(R.string.app_name))
+    .setSubText(service.getString(R.string.app_name))
+    .setCategory(NotificationCompat.CATEGORY_SERVICE)
+    .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+    .setPriority(NotificationCompat.PRIORITY_LOW)
+    .setOngoing(true)
+    .setShowWhen(false)
+    .setOnlyAlertOnce(true)
+    .setContentIntent(contentPendingIntent)
+    .addAction(
+        R.drawable.ic_delete_24dp,
+        service.getString(R.string.notification_action_stop_v2ray),
+        stopV2RayPendingIntent
+    )
+    .addAction(
+        R.drawable.ic_restore_24dp,
+        service.getString(R.string.title_service_restart),
+        restartV2RayPendingIntent
+    )
             .addAction(
                 R.drawable.ic_restore_24dp,
                 service.getString(R.string.title_service_restart),
