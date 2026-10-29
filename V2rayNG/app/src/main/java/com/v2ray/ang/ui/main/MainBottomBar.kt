@@ -81,33 +81,35 @@ fun MainBottomBar(
                 .windowInsetsPadding(WindowInsets.navigationBars)
         ) {
             AppDivider()
-            Row(
-    modifier = Modifier
-        .fillMaxWidth()
-        .height(64.dp)
-        .padding(horizontal = 16.dp),
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.SpaceBetween
-) {
-    Crossfade(
-        targetState = displayText,
-        animationSpec = tween(durationMillis = 180),
-        label = "connectionStatus"
-    ) { statusText ->
-        Text(
-            text = statusText,
-            style = MaterialTheme.typography.bodyMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .weight(1f)
-                .padding(end = 68.dp)
-                .semantics {
-                    contentDescription = statusText
+                        Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Crossfade(
+                    targetState = displayText,
+                    animationSpec = tween(durationMillis = 180),
+                    label = "connectionStatus"
+                ) { statusText ->
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 68.dp)
+                            .semantics {
+                                contentDescription = statusText
+                            }
+                    )
                 }
-        )
-    }
-          }
+            }
+        }
+
         FloatingActionButton(
             onClick = {
                 if (!isRunning) {
