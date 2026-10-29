@@ -1,3 +1,4 @@
+
 package com.v2ray.ang.service
 
 import android.app.Service
@@ -38,8 +39,8 @@ class SubscriptionUpdateService : Service() {
 
     private val runningTasks = AtomicInteger(0)
 
-    // manage active batch workers so each batch is independent and cancellable
-    private val activeWorkers = Collections.synchronizedList(mutableListOf<RealPingWorkerService>())
+    private val activeWorkers =
+        Collections.synchronizedList(mutableListOf<RealPingWorkerService>())
 
     private val updateSemaphore = Semaphore(2)
 
@@ -51,24 +52,40 @@ class SubscriptionUpdateService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
-        LogUtil.i(AppConfig.TAG, "SubscriptionUpdateService is being destroyed")
+        LogUtil.i(
+            AppConfig.TAG,
+            "SubscriptionUpdateService is being destroyed"
+        )
+
         val snapshot = ArrayList(activeWorkers)
         snapshot.forEach { it.cancel() }
         activeWorkers.clear()
+
         serviceJob.cancel()
         NotificationHelper.stopForeground(this)
-        NotificationHelper.cancel(NotificationChannelType.SUBSCRIPTION_UPDATE, this)
+        NotificationHelper.cancel(
+            NotificationChannelType.SUBSCRIPTION_UPDATE,
+            this
+        )
+
         super.onDestroy()
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int
+    ): Int {
         NotificationHelper.startForeground(
             this,
             NotificationChannelType.SUBSCRIPTION_UPDATE,
             getString(R.string.title_pref_auto_update_subscription),
             getString(R.string.app_name)
         )
-        val message = intent?.serializable<SubscriptionUpdateMessage>("content")
+
+        val message =
+            intent?.serializable<SubscriptionUpdateMessage>("content")
+
         if (message == null) {
             stopSelf(startId)
             return START_NOT_STICKY
@@ -76,6 +93,7 @@ class SubscriptionUpdateService : Service() {
 
         when (message.key) {
             AppConfig.MSG_SUB_UPDATE_START -> handleUpdateStart(message)
+
             AppConfig.MSG_SUB_UPDATE_CANCEL -> {
                 NotificationHelper.stopForeground(this)
                 stopSelf(startId)
@@ -86,24 +104,50 @@ class SubscriptionUpdateService : Service() {
                 stopSelf(startId)
             }
         }
+
         return START_NOT_STICKY
     }
 
     private fun handleUpdateStart(message: SubscriptionUpdateMessage) {
-        LogUtil.i(AppConfig.TAG, "SubscriptionUpdateService starting update task for ${message.subIds.size} subscriptions")
+        LogUtil.i(
+            AppConfig.TAG,
+            "SubscriptionUpdateService starting update task " +
+                "for ${message.subIds.size} subscriptions"
+        )
 
         runningTasks.incrementAndGet()
+
         serviceScope.launch {
             updateSemaphore.withPermit {
                 try {
                     message.subIds.forEach { subId ->
                         updateSingle(subId, message.forcedUpdate)
                     }
+
+                    // Select the best successful ping only after the
+                    // requested subscriptions have finished updating/testing.
+                    if (
+                        MmkvManager.decodeSettingsBool(
+                            AppConfig.PREF_AUTO_TEST_AFTER_UPDATE_SUBSCRIPTION,
+                            false
+                        )
+                    ) {
+                        selectBestPingServer()
+                    }
                 } catch (e: Exception) {
-                    LogUtil.e(AppConfig.TAG, "SubscriptionUpdateService update failed", e)
+                    LogUtil.e(
+                        AppConfig.TAG,
+                        "SubscriptionUpdateService update failed",
+                        e
+                    )
                 } finally {
-                    if (runningTasks.decrementAndGet() == 0 && activeWorkers.isEmpty()) {
-                        NotificationHelper.stopForeground(this@SubscriptionUpdateService)
+                    if (
+                        runningTasks.decrementAndGet() == 0 &&
+                        activeWorkers.isEmpty()
+                    ) {
+                        NotificationHelper.stopForeground(
+                            this@SubscriptionUpdateService
+                        )
                         stopSelf()
                     }
                 }
@@ -111,54 +155,183 @@ class SubscriptionUpdateService : Service() {
         }
     }
 
-    private suspend fun updateSingle(subId: String, forcedUpdate: Boolean) {
+    private suspend fun updateSingle(
+        subId: String,
+        forcedUpdate: Boolean
+    ) {
         val subItem = MmkvManager.decodeSubscription(subId) ?: return
+
         if (!subItem.enabled || subItem.url.isEmpty()) {
             return
         }
 
         val sub = SubscriptionCache(subId, subItem)
 
-        LogUtil.i(AppConfig.TAG, "SubscriptionUpdateService: Updating ${subItem.remarks}")
+        LogUtil.i(
+            AppConfig.TAG,
+            "SubscriptionUpdateService: Updating ${subItem.remarks}"
+        )
+
         showNotification(
             context = this,
             titleResId = R.string.title_pref_auto_update_subscription,
-            content = getString(R.string.subscription_update_updating, subItem.remarks)
+            content = getString(
+                R.string.subscription_update_updating,
+                subItem.remarks
+            )
         )
 
-        if (forcedUpdate || MmkvManager.decodeSettingsBool(AppConfig.PREF_UPDATE_SUBSCRIPTION, false)) {
+        if (
+            forcedUpdate ||
+            MmkvManager.decodeSettingsBool(
+                AppConfig.PREF_UPDATE_SUBSCRIPTION,
+                false
+            )
+        ) {
             AngConfigManager.updateConfigViaSub(sub)
         }
 
-        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_AUTO_TEST_AFTER_UPDATE_SUBSCRIPTION, false)) {
+        if (
+            MmkvManager.decodeSettingsBool(
+                AppConfig.PREF_AUTO_TEST_AFTER_UPDATE_SUBSCRIPTION,
+                false
+            )
+        ) {
             testSubscriptionServers(sub)
 
-            if (MmkvManager.decodeSettingsBool(AppConfig.PREF_AUTO_REMOVE_INVALID_AFTER_TEST, false)) {
-                LogUtil.i(AppConfig.TAG, "SubscriptionUpdateService: removing invalid servers for ${subItem.remarks}")
+            if (
+                MmkvManager.decodeSettingsBool(
+                    AppConfig.PREF_AUTO_REMOVE_INVALID_AFTER_TEST,
+                    false
+                )
+            ) {
+                LogUtil.i(
+                    AppConfig.TAG,
+                    "SubscriptionUpdateService: removing invalid " +
+                        "servers for ${subItem.remarks}"
+                )
+
                 showNotification(
                     context = this,
                     titleResId = R.string.title_del_invalid_config,
                     content = subItem.remarks
                 )
+
                 AngConfigManager.removeInvalidServer(subId)
             }
-            if (MmkvManager.decodeSettingsBool(AppConfig.PREF_AUTO_SORT_AFTER_TEST, false)) {
-                LogUtil.i(AppConfig.TAG, "SubscriptionUpdateService: sorting servers for ${subItem.remarks}")
+
+            if (
+                MmkvManager.decodeSettingsBool(
+                    AppConfig.PREF_AUTO_SORT_AFTER_TEST,
+                    false
+                )
+            ) {
+                LogUtil.i(
+                    AppConfig.TAG,
+                    "SubscriptionUpdateService: sorting servers " +
+                        "for ${subItem.remarks}"
+                )
+
                 showNotification(
                     context = this,
                     titleResId = R.string.title_sort_by_test_results,
                     content = subItem.remarks
                 )
+
                 AngConfigManager.sortByTestResultsForSub(subId)
             }
         }
 
-        LogUtil.i(AppConfig.TAG, "SubscriptionUpdateService: Finished ${subItem.remarks}")
+        LogUtil.i(
+            AppConfig.TAG,
+            "SubscriptionUpdateService: Finished ${subItem.remarks}"
+        )
+    }
+
+    /**
+     * Finds the lowest successful ping across the available servers,
+     * moves that server to the beginning of its own subscription list,
+     * and saves it as the selected server.
+     *
+     * A delay greater than zero is treated as a successful ping.
+     * If there is no successful result, the current selection is preserved.
+     */
+    private fun selectBestPingServer() {
+        val serverGuids = MmkvManager.decodeAllServerList().distinct()
+
+        val bestServer = serverGuids
+            .mapNotNull { guid ->
+                val delay =
+                    MmkvManager.decodeServerAffiliationInfo(guid)
+                        ?.testDelayMillis ?: 0L
+
+                if (delay > 0L) {
+                    guid to delay
+                } else {
+                    null
+                }
+            }
+            .minByOrNull { it.second }
+            ?: run {
+                LogUtil.i(
+                    AppConfig.TAG,
+                    "Auto-select skipped: no successful ping results"
+                )
+                return
+            }
+
+        val bestGuid = bestServer.first
+        val config = MmkvManager.decodeServerConfig(bestGuid)
+
+        if (config == null) {
+            LogUtil.w(
+                AppConfig.TAG,
+                "Auto-select skipped: best server config not found"
+            )
+            return
+        }
+
+        // Move the selected server to the top of its subscription list.
+        val subId = config.subscriptionId.orEmpty()
+        val serverList = MmkvManager.decodeServerList(subId)
+
+        if (bestGuid !in serverList) {
+            LogUtil.w(
+                AppConfig.TAG,
+                "Auto-select skipped: best server is not in its server list"
+            )
+            return
+        }
+
+        serverList.remove(bestGuid)
+        serverList.add(0, bestGuid)
+        MmkvManager.encodeServerList(serverList, subId)
+
+        // Persist the selected server.
+        MmkvManager.setSelectServer(bestGuid)
+
+        LogUtil.i(
+            AppConfig.TAG,
+            "Auto-selected best ping server: " +
+                "${config.remarks}, ${bestServer.second} ms"
+        )
+
+        showNotification(
+            context = this,
+            titleResId = R.string.title_real_ping_all_server,
+            content = "${config.remarks} — ${bestServer.second} ms"
+        )
     }
 
     private suspend fun testSubscriptionServers(sub: SubscriptionCache) {
         val subId = sub.guid
-        LogUtil.i(AppConfig.TAG, "SubscriptionUpdateService: starting test phase for ${sub.subscription.remarks}")
+
+        LogUtil.i(
+            AppConfig.TAG,
+            "SubscriptionUpdateService: starting test phase " +
+                "for ${sub.subscription.remarks}"
+        )
+
         showNotification(
             context = this,
             titleResId = R.string.title_real_ping_all_server,
@@ -166,27 +339,44 @@ class SubscriptionUpdateService : Service() {
         )
 
         val guids = MmkvManager.decodeServerList(subId)
+
         if (guids.isNotEmpty()) {
             val deferred = CompletableDeferred<Unit>()
+
             lateinit var worker: RealPingWorkerService
+
             worker = RealPingWorkerService(
                 context = this,
                 guids = guids,
                 onEvent = { event ->
-                    handleWorkerEvent(event, sub.subscription.remarks) {
+                    handleWorkerEvent(
+                        event,
+                        sub.subscription.remarks
+                    ) {
                         activeWorkers.remove(worker)
                         deferred.complete(Unit)
                     }
                 }
             )
+
             activeWorkers.add(worker)
             worker.start()
+
             deferred.await()
-            LogUtil.i(AppConfig.TAG, "SubscriptionUpdateService: test phase finished for ${sub.subscription.remarks}")
+
+            LogUtil.i(
+                AppConfig.TAG,
+                "SubscriptionUpdateService: test phase finished " +
+                    "for ${sub.subscription.remarks}"
+            )
         }
     }
 
-    private fun handleWorkerEvent(event: RealPingEvent, remarks: String, onWorkerDone: () -> Unit) {
+    private fun handleWorkerEvent(
+        event: RealPingEvent,
+        remarks: String,
+        onWorkerDone: () -> Unit
+    ) {
         when (event) {
             is RealPingEvent.Progress -> {
                 val notificationText = getString(
@@ -194,16 +384,24 @@ class SubscriptionUpdateService : Service() {
                     event.text,
                     remarks
                 )
+
                 showNotification(
                     context = this,
                     titleResId = R.string.title_real_ping_all_server,
                     content = notificationText
                 )
-                LogUtil.i(AppConfig.TAG, "SubscriptionUpdateService: ${event.text} in $remarks")
+
+                LogUtil.i(
+                    AppConfig.TAG,
+                    "SubscriptionUpdateService: ${event.text} in $remarks"
+                )
             }
 
             is RealPingEvent.Result -> {
-                MmkvManager.encodeServerTestDelayMillis(event.guid, event.delayMillis)
+                MmkvManager.encodeServerTestDelayMillis(
+                    event.guid,
+                    event.delayMillis
+                )
             }
 
             is RealPingEvent.Finish -> {
@@ -212,7 +410,11 @@ class SubscriptionUpdateService : Service() {
         }
     }
 
-    private fun showNotification(context: Context, titleResId: Int, content: String) {
+    private fun showNotification(
+        context: Context,
+        titleResId: Int,
+        content: String
+    ) {
         NotificationHelper.notify(
             NotificationChannelType.SUBSCRIPTION_UPDATE,
             context,
