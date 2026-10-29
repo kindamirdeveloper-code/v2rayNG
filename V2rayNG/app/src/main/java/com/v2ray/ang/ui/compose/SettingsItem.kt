@@ -1,5 +1,12 @@
 package com.v2ray.ang.ui.compose
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -49,6 +56,14 @@ fun CollapsiblePreferenceGroupHeader(
     onExpandedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val arrowRotation by animateFloatAsState(
+    targetValue = if (expanded) 180f else 0f,
+    animationSpec = spring(
+        dampingRatio = Spring.DampingRatioNoBouncy,
+        stiffness = Spring.StiffnessMedium
+    ),
+    label = "settingsGroupArrowRotation"
+)
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -68,7 +83,7 @@ fun CollapsiblePreferenceGroupHeader(
             tint = MaterialTheme.colorScheme.secondary,
             modifier = Modifier
                 .size(24.dp)
-                .rotate(if (expanded) 180f else 0f)
+                .rotate(arrowRotation)
         )
     }
 }
@@ -87,12 +102,44 @@ private fun SettingsItemRow(
     else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
     val descriptionColor = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant
     else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+val interactionSource = remember {
+    MutableInteractionSource()
+}
 
+val isPressed by interactionSource.collectIsPressedAsState()
+
+val rowScale by animateFloatAsState(
+    targetValue = if (isPressed && enabled && onClick != null) {
+        0.985f
+    } else {
+        1f
+    },
+    animationSpec = spring(
+        dampingRatio = Spring.DampingRatioNoBouncy,
+        stiffness = Spring.StiffnessMedium
+    ),
+    label = "settingsRowScale"
+)
     Row(
         modifier = modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(enabled = enabled, onClick = onClick) else Modifier)
-            .padding(16.dp),
+    .graphicsLayer {
+        scaleX = rowScale
+        scaleY = rowScale
+    }
+    .fillMaxWidth()
+    .then(
+        if (onClick != null) {
+            Modifier.clickable(
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+                enabled = enabled,
+                onClick = onClick
+            )
+        } else {
+            Modifier
+        }
+    )
+    .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != null) {
