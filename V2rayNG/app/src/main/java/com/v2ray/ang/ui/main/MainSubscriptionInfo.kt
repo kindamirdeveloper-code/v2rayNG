@@ -81,6 +81,7 @@ internal fun buildSubscriptionInfoUiModel(
  * Fixed box on top of a subscription group showing the account information published by the
  * subscription panel: traffic, expiry date and shortcuts (support link, panel page, update).
  */
+
 @Composable
 internal fun SubscriptionInfoCard(
     info: SubscriptionUsageInfo,
@@ -89,27 +90,64 @@ internal fun SubscriptionInfoCard(
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val model = remember(info) { buildSubscriptionInfoUiModel(info, System.currentTimeMillis()) }
+    val model = remember(info) {
+        buildSubscriptionInfoUiModel(info, System.currentTimeMillis())
+    }
+
+    val cardShape = RoundedCornerShape(22.dp)
+    val cardColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    val accentColor = when {
+        model.expired -> MaterialTheme.colorScheme.error
+        model.trafficLow -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.primary
+    }
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp),
-        shape = MaterialTheme.shapes.medium,
-        // Almost opaque: the list scrolls underneath without showing through readably.
-        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = CARD_ALPHA),
-        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        shape = cardShape,
+        color = cardColor.copy(alpha = CARD_ALPHA),
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
+        ),
+        shadowElevation = 2.dp,
     ) {
-        Column(Modifier.padding(start = 16.dp, end = 8.dp, top = 2.dp, bottom = 10.dp)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = model.title ?: fallbackTitle,
+        Column(
+            modifier = Modifier.padding(
+                start = 16.dp,
+                end = 10.dp,
+                top = 10.dp,
+                bottom = 14.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
                     modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = "SUBSCRIPTION",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1
+                    )
+                    Text(
+                        text = model.title ?: fallbackTitle,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
                 model.supportUrl?.let { url ->
                     CardIconButton(
                         iconRes = if (SubscriptionInfoParser.isTelegramLink(url)) {
@@ -117,42 +155,48 @@ internal fun SubscriptionInfoCard(
                         } else {
                             R.drawable.ic_feedback_24dp
                         },
-                        contentDescription = stringResource(R.string.sub_info_open_support),
-                        onClick = { onOpenLink(url) },
+                        contentDescription = stringResource(
+                            R.string.sub_info_open_support
+                        ),
+                        onClick = { onOpenLink(url) }
                     )
                 }
+
                 model.webPageUrl?.let { url ->
                     CardIconButton(
                         iconRes = R.drawable.ic_about_24dp,
-                        contentDescription = stringResource(R.string.sub_info_open_page),
-                        onClick = { onOpenLink(url) },
+                        contentDescription = stringResource(
+                            R.string.sub_info_open_page
+                        ),
+                        onClick = { onOpenLink(url) }
                     )
                 }
+
                 CardIconButton(
                     iconRes = R.drawable.ic_refresh_24dp,
-                    contentDescription = stringResource(R.string.title_sub_update),
-                    onClick = onRefresh,
+                    contentDescription = stringResource(
+                        R.string.title_sub_update
+                    ),
+                    onClick = onRefresh
                 )
             }
 
-            // One semantics node for the read-only figures so TalkBack reads them in one go.
             Column(
-                Modifier
+                modifier = Modifier
                     .fillMaxWidth()
-                    .padding(end = 8.dp)
-                    .semantics(mergeDescendants = true) {}
+                    .semantics(mergeDescendants = true) {},
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 StatsRow(model)
+
                 model.trafficFraction?.let { fraction ->
-                    Spacer(Modifier.height(4.dp))
                     LinearProgressIndicator(
                         progress = { fraction },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(4.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                            .clearAndSetSemantics {},
-                        color = if (model.trafficLow) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                            .height(7.dp)
+                            .clip(RoundedCornerShape(50)),
+                        color = accentColor,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
                     )
                 }
@@ -160,6 +204,7 @@ internal fun SubscriptionInfoCard(
         }
     }
 }
+
 
 @Composable
 private fun CardIconButton(iconRes: Int, contentDescription: String, onClick: () -> Unit) {
